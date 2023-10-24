@@ -1,0 +1,63 @@
+---
+title: "Financial Data Analysis"
+author: Daniel Rohrbach
+format: html
+editor: visual
+echo: false
+message: false
+warning: false
+---
+
+
+```{r}
+here::i_am("dplyr-102.Rproj")
+library(here)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(vroom)
+```
+
+## Data Loading
+```{r}
+#| message: false
+clients <- vroom(here("data","client.csv"))
+accounts <- vroom(here("data","account.csv"))
+disp <- vroom(here("data","disp.csv"))
+```
+## Joining data tables
+A collection of joining functions of the form 
+
+### Inner join
+```{r}
+da <- inner_join(accounts, disp)
+```
+
+```{r}
+cda<- inner_join(clients, da, by=join_by(client_id), suffix = c("_home", "_bank"))
+```
+
+### home district versus bank district
+```{r}
+home_diff_bank <- cda |> filter (district_id_home != district_id_bank) |> nrow()
+```
+
+We observe that `r home_diff_bank` clients have a bank in another district as the one they live in. 
+
+```{r}
+cda |> 
+  group_by (account_id) |> 
+  distinct (district_id_home) |> 
+  summarise(N=n()) |>
+  filter(N>1)
+```
+### Gender gap ?
+```{r}
+clients |>
+  ggplot(aes(y=gender)) + geom_bar()
+```
+```{r}
+cda |>
+  count(gender, type)
+```
+
